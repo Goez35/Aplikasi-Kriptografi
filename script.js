@@ -7,7 +7,7 @@ const menuData={
  rsa:{title:"RSA",desc:"Algoritma modern dengan pasangan kunci publik dan privat.",shift:false,key:false},
  super:{title:"Super Enkripsi",desc:"Gabungan Caesar → Vigenère → AES → RSA (hybrid encryption).",shift:true,key:true}
 };
-
+//test
 function addStep(title,text){const d=document.createElement("div");d.className="step";d.innerHTML=`<strong>${escapeHtml(title)}</strong><span>${escapeHtml(String(text))}</span>`;$("process").appendChild(d)}
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function resetProcess(){ $("process").innerHTML=""; }
