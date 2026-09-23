@@ -8,7 +8,7 @@ const menuData={
  super:{title:"Super Enkripsi",desc:"Gabungan Caesar → Vigenère → AES → RSA (hybrid encryption).",shift:true,key:true}
 };
 //test
-function addStep(title,text){const d=document.createElement("div");d.className="step";d.innerHTML=`<strong>${escapeHtml(title)}</strong><span>${escapeHtml(String(text))}</span>`;$("process").appendChild(d)}
+function addStep(title,text,extraClass){const d=document.createElement("div");d.className="step"+(extraClass?" "+extraClass:"");d.innerHTML=`<strong>${escapeHtml(title)}</strong><span>${escapeHtml(String(text))}</span>`;$("process").appendChild(d)}
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function resetProcess(){ $("process").innerHTML=""; }
 function setMenu(m){
@@ -30,6 +30,30 @@ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>setMenu(b.dataset.men
 $("clearBtn").onclick=()=>{$("inputText").value="";$("result").value="";resetProcess()};
 $("copyBtn").onclick=async()=>{if($("result").value){await navigator.clipboard.writeText($("result").value);alert("Hasil berhasil disalin.");}};
 
+const COMMON_WORDS=["yang","dan","di","ke","dari","ini","itu","dengan","untuk","tidak","akan","pada","juga","saya","kamu","kita","mereka","adalah","atau","karena","saat","dapat","harus","sudah","masih","hanya","dalam","ada","bisa","satu","dua","orang","tahun","the","and","is","to","of","in","that","it","you","for","on","with","as","this","was","are","be","have","not","but","he","she","they"];
+const ENGLISH_FREQ={a:8.2,b:1.5,c:2.8,d:4.3,e:12.7,f:2.2,g:2.0,h:6.1,i:7.0,j:0.15,k:0.77,l:4.0,m:2.4,n:6.7,o:7.5,p:1.9,q:0.095,r:6.0,s:6.3,t:9.1,u:2.8,v:0.98,w:2.4,x:0.15,y:2.0,z:0.074};
+function scoreCandidate(text){
+ const lower=text.toLowerCase();
+ let wordScore=0;
+ for(const w of COMMON_WORDS){
+  const matches=lower.match(new RegExp(`\\b${w}\\b`,"g"));
+  if(matches)wordScore+=matches.length*(w.length>=4?2:1);
+ }
+ const letters=lower.replace(/[^a-z]/g,"");
+ let chi2=99999;
+ if(letters.length>0){
+  const counts={};
+  for(const c of letters)counts[c]=(counts[c]||0)+1;
+  chi2=0;
+  for(const c in ENGLISH_FREQ){
+   const observed=counts[c]||0;
+   const expected=ENGLISH_FREQ[c]/100*letters.length;
+   chi2+=Math.pow(observed-expected,2)/(expected||1);
+  }
+ }
+ return {wordScore,chi2};
+}
+
 function caesar(text,shift){return [...text].map(ch=>{let c=ch.charCodeAt(0);if(c>=65&&c<=90)return String.fromCharCode((c-65+shift+26)%26+65);if(c>=97&&c<=122)return String.fromCharCode((c-97+shift+26)%26+97);return ch}).join("")}
 function bruteForceCaesar(text){
   if(!text.trim())throw new Error("Masukkan teks terlebih dahulu.");
@@ -41,12 +65,25 @@ function bruteForceCaesar(text){
   addStep("Metode","Brute Force Caesar");
   addStep("Kemungkinan Kunci","25");
 
+    const candidates=[];
   for(let shift=1;shift<=25;shift++){
     const result=caesar(text,-shift);
-    addStep(`Shift ${shift}`,result);
+    candidates.push({shift,result,...scoreCandidate(result)});
   }
 
-  $("result").value="Brute force selesai. Periksa hasil pada bagian Proses Algoritma.";
+  let best=candidates[0];
+  for(const c of candidates){
+    if(c.wordScore>best.wordScore||(c.wordScore===best.wordScore&&c.chi2<best.chi2))best=c;
+  }
+
+  addStep("⭐ Tebakan Terbaik",`Shift ${best.shift}: ${best.result}`,"step-best");
+  for(const c of candidates){
+    addStep(`Shift ${c.shift}${c===best?" ⭐":""}`,c.result,c===best?"step-best":"");
+  }
+
+  $("result").value=best.wordScore>0
+   ?`Tebakan terbaik: Shift ${best.shift} → ${best.result}`
+   :"Brute force selesai. Tidak ditemukan kata umum, periksa daftar kemungkinan pada bagian Proses Algoritma secara manual.";
 }
 function vigenere(text,key,dec=false){key=key.replace(/[^A-Za-z]/g,"").toUpperCase();if(!key)throw Error("Kunci Vigenère tidak boleh kosong.");let i=0;return [...text].map(ch=>{let c=ch.charCodeAt(0);if((c>=65&&c<=90)||(c>=97&&c<=122)){let base=c>=97?97:65;let k=key.charCodeAt(i++%key.length)-65;return String.fromCharCode((c-base+(dec?-k:k)+26)%26+base)}return ch}).join("")}
 function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)))}
