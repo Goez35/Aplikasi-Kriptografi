@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Kriptografi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand">🔐 APLIKASI KRIPTOGRAFI</div>
+  <div class="subtitle">Enkripsi dan Dekripsi Kriptografi Klasik, Modern, dan Super Enkripsi</div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-menu="caesar">1. Caesar</button>
+  <button class="tab" data-menu="vigenere">2. Vigenère</button>
+  <button class="tab" data-menu="aes">3. AES</button>
+  <button class="tab" data-menu="rsa">4. RSA</button>
+  <button class="tab" data-menu="super">5. Super Enkripsi</button>
+</nav>
+
+<main>
+  <section class="card">
+    <h2 id="menuTitle">Caesar Cipher</h2>
+    <p id="menuDesc">Algoritma kriptografi klasik dengan pergeseran karakter.</p>
+
+    <label for="inputText">Teks Input</label>
+    <textarea id="inputText" placeholder="Masukkan plaintext atau ciphertext..."></textarea>
+
+    <div class="grid">
+      <div id="shiftBox">
+        <label for="shift">Pergeseran Caesar</label>
+        <input id="shift" type="number" min="0" max="25" value="3">
+      </div>
+      <div id="keyBox" class="hidden">
+        <label for="key">Kunci</label>
+        <input id="key" type="text" value="KRIPTO" placeholder="Masukkan kunci">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="encryptBtn" class="primary">🔒 Enkripsi</button>
+      <button id="decryptBtn" class="secondary">🔓 Dekripsi</button>
+      <button id="clearBtn" class="ghost">Bersihkan</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Proses Algoritma</h2>
+    <div id="process" class="process">
+      <div class="empty">Belum ada proses. Masukkan teks lalu pilih Enkripsi atau Dekripsi.</div>
+    </div>
+  </section>
+
+  <section class="card result-card">
+    <h2>Hasil</h2>
+    <textarea id="result" readonly placeholder="Hasil enkripsi/dekripsi akan tampil di sini..."></textarea>
+    <button id="copyBtn" class="ghost">Salin Hasil</button>
+  </section>
+
+  <section id="rsaInfo" class="card hidden">
+    <h2>Informasi RSA</h2>
+    <p>RSA menggunakan pasangan kunci publik dan privat yang dibuat otomatis saat halaman dibuka.</p>
+    <button id="generateRsaBtn" class="secondary">Buat/Ganti Kunci RSA</button>
+    <div id="rsaStatus" class="status">Mempersiapkan kunci RSA...</div>
+  </section>
+
+  <section class="card info">
+    <h2>Catatan Super Enkripsi</h2>
+    <p>Menu 5 menggabungkan empat algoritma: Caesar → Vigenère → AES → RSA. Karena RSA tidak dirancang untuk mengenkripsi data panjang secara langsung, RSA digunakan untuk mengenkripsi kunci AES (hybrid encryption). Saat dekripsi urutannya dibalik.</p>
+  </section>
+</main>
+
+<footer>Proyek Kriptografi • Aplikasi pembelajaran enkripsi dan dekripsi</footer>
+<script src="script.js"></script>
+</body>
+</html>
