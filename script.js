@@ -14,17 +14,40 @@ function resetProcess(){ $("process").innerHTML=""; }
 function setMenu(m){
  state.menu=m; const d=menuData[m];
  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.menu===m));
- $("menuTitle").textContent=d.title;$("menuDesc").textContent=d.desc;
+
+ $("menuTitle").textContent=d.title;
+ $("menuDesc").textContent=d.desc;
  $("shiftBox").classList.toggle("hidden",!d.shift);
  $("keyBox").classList.toggle("hidden",!d.key);
+ $("bruteForceBtn").classList.toggle("hidden",m!=="caesar");
+ $("bruteForceHint").classList.toggle("hidden",m!=="caesar");
  $("rsaInfo").classList.toggle("hidden",m!=="rsa"&&m!=="super");
- resetProcess();$("result").value="";
+
+ resetProcess();
+ $("result").value="";
 }
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>setMenu(b.dataset.menu));
 $("clearBtn").onclick=()=>{$("inputText").value="";$("result").value="";resetProcess()};
 $("copyBtn").onclick=async()=>{if($("result").value){await navigator.clipboard.writeText($("result").value);alert("Hasil berhasil disalin.");}};
 
 function caesar(text,shift){return [...text].map(ch=>{let c=ch.charCodeAt(0);if(c>=65&&c<=90)return String.fromCharCode((c-65+shift+26)%26+65);if(c>=97&&c<=122)return String.fromCharCode((c-97+shift+26)%26+97);return ch}).join("")}
+function bruteForceCaesar(text){
+  if(!text.trim())throw new Error("Masukkan teks terlebih dahulu.");
+  if(!/[A-Za-z]/.test(text))throw new Error("Teks tidak mengandung huruf A-Z, sehingga brute force tidak menghasilkan variasi apa pun.");
+
+  resetProcess();
+
+  addStep("Input",text);
+  addStep("Metode","Brute Force Caesar");
+  addStep("Kemungkinan Kunci","25");
+
+  for(let shift=1;shift<=25;shift++){
+    const result=caesar(text,-shift);
+    addStep(`Shift ${shift}`,result);
+  }
+
+  $("result").value="Brute force selesai. Periksa hasil pada bagian Proses Algoritma.";
+}
 function vigenere(text,key,dec=false){key=key.replace(/[^A-Za-z]/g,"").toUpperCase();if(!key)throw Error("Kunci Vigenère tidak boleh kosong.");let i=0;return [...text].map(ch=>{let c=ch.charCodeAt(0);if((c>=65&&c<=90)||(c>=97&&c<=122)){let base=c>=97?97:65;let k=key.charCodeAt(i++%key.length)-65;return String.fromCharCode((c-base+(dec?-k:k)+26)%26+base)}return ch}).join("")}
 function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)))}
 function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0)).buffer}
@@ -58,8 +81,13 @@ async function run(encrypt){
  resetProcess();
  try{
   if(state.menu==="caesar"){
-   addStep("Input",text);addStep("Pergeseran",shift);
-   const out=caesar(text,encrypt?shift:-shift);addStep(encrypt?"Enkripsi":"Dekripsi",out);$("result").value=out;
+    addStep("Input",text);
+    addStep("Pergeseran",shift);
+
+    const out=caesar(text,encrypt?shift:-shift);
+
+    addStep(encrypt?"Enkripsi":"Dekripsi",out);
+    $("result").value=out;
   }else if(state.menu==="vigenere"){
    addStep("Input",text);addStep("Kunci",key);
    const out=vigenere(text,key,!encrypt);addStep(encrypt?"Enkripsi Vigenère":"Dekripsi Vigenère",out);$("result").value=out;
@@ -96,6 +124,17 @@ async function run(encrypt){
  }catch(e){addStep("ERROR",e.message||"Terjadi kesalahan.");$("result").value="";}
 }
 $("encryptBtn").onclick=()=>run(true);$("decryptBtn").onclick=()=>run(false);
+$("bruteForceBtn").onclick=()=>{
+  const text=$("inputText").value;
+  resetProcess();
+  try{
+   bruteForceCaesar(text);
+  }catch(e){
+   addStep("ERROR",e.message||"Terjadi kesalahan saat menjalankan brute force.");
+   $("result").value="";
+   alert(e.message||"Terjadi kesalahan saat menjalankan brute force.");
+  }
+};
 $("generateRsaBtn").onclick=async()=>{state.rsaKeys=null;await ensureRSA()};
 ensureRSA().catch(()=>{});
 setMenu("caesar");
